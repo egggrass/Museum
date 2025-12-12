@@ -1,0 +1,11 @@
+mergeInto(LibraryManager.library, {
+    SaveImage: function (imgData, length, fileNamePtr) {
+        var img = UTF8ToString(imgData);
+        var fileName = UTF8ToString(fileNamePtr);
+
+        var a = document.createElement('a');
+        a.href = "data:image/png;base64," + img;
+        a.download = fileName;
+        a.click();
+    }
+});

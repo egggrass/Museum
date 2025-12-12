@@ -1,0 +1,48 @@
+mergeInto(LibraryManager.library, {
+    StartCamera: function(front, unityObjName) {
+        let facingMode = front ? "user" : "environment";
+
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            console.error("getUserMedia not supported");
+            return;
+        }
+
+        navigator.mediaDevices.getUserMedia({
+            video: { facingMode: facingMode }
+        })
+        .then(stream => {
+            let video = document.getElementById("unityCameraVideo");
+            if (!video) {
+                video = document.createElement("video");
+                video.id = "unityCameraVideo";
+                video.style.display = "none";
+                document.body.appendChild(video);
+            }
+            video.srcObject = stream;
+            video.play();
+
+            window.cameraCapture = function() {
+                let canvas = document.createElement("canvas");
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                let ctx = canvas.getContext("2d");
+                ctx.drawImage(video, 0, 0);
+
+                let data = canvas.toDataURL("image/png");
+
+                SendMessage(unityObjName, "OnCameraFrame", data);
+            };
+        })
+        .catch(err => {
+            console.error("Camera error:", err);
+        });
+    },
+
+    TakePhoto: function() {
+        if (window.cameraCapture)
+            window.cameraCapture();
+    }
+
+
+});
