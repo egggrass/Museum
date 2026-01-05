@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Balance : MonoBehaviour
 {
@@ -43,58 +43,80 @@ public class Balance : MonoBehaviour
         );
     }
 
+    /// <summary>
+    /// 放置物品到天平
+    /// </summary>
     public void PlaceItem(Item item, bool isLeft)
     {
-        // �Ѿ�����ƽ�� �� �Ż�ԭλ
+        // 情况 1：物品已经在天平上 → 移除
         if (item.isPlaced)
         {
             RemoveItem(item);
-            item.ReturnToOriginal();
             UpdateBalance();
             return;
         }
 
-        // �ŵ�����
+        // 情况 2：放到左盘
         if (isLeft)
         {
+            // 左盘已有物品 → 先移除
             if (leftItem != null)
             {
                 leftItem.ReturnToOriginal();
-                leftItem.isPlaced = false;
+                leftItem = null;
             }
 
             leftItem = item;
-            item.transform.position = leftPlate.position;
+            AttachItemToPlate(item, leftPlate);
         }
-        // �ŵ�����
+        // 情况 3：放到右盘
         else
         {
             if (rightItem != null)
             {
                 rightItem.ReturnToOriginal();
-                rightItem.isPlaced = false;
+                rightItem = null;
             }
 
             rightItem = item;
-            item.transform.position = rightPlate.position;
+            AttachItemToPlate(item, rightPlate);
         }
 
-        item.isPlaced = true;
         UpdateBalance();
     }
 
-    void RemoveItem(Item item)
+    /// <summary>
+    /// 将物品绑定到盘上
+    /// </summary>
+    private void AttachItemToPlate(Item item, Transform plate)
+    {
+        item.transform.SetParent(plate);
+        item.transform.localPosition = Vector3.zero;
+        item.transform.localRotation = Quaternion.identity;
+        item.isPlaced = true;
+    }
+
+    /// <summary>
+    /// 从天平移除物品
+    /// </summary>
+    private void RemoveItem(Item item)
     {
         if (leftItem == item) leftItem = null;
         if (rightItem == item) rightItem = null;
+
+        item.ReturnToOriginal(); // ⭐ 关键：由 Item 自己恢复父物体与位置
     }
 
-    void UpdateBalance()
+    /// <summary>
+    /// 根据重量更新天平高度
+    /// </summary>
+    private void UpdateBalance()
     {
-        // Ĭ�ϻص�ˮƽ
+        // 默认回到水平
         leftTargetPos = leftOrigin;
         rightTargetPos = rightOrigin;
 
+        // 少于两个物品，不倾斜
         if (leftItem == null || rightItem == null)
             return;
 
@@ -108,5 +130,6 @@ public class Balance : MonoBehaviour
             rightTargetPos = rightOrigin + Vector3.down * heightOffset;
             leftTargetPos = leftOrigin + Vector3.up * heightOffset;
         }
+        // 重量相等 → 保持水平
     }
 }
